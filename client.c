@@ -1,52 +1,49 @@
-#include <netdb.h>
+// Client side C/C++ program to demonstrate Socket
+// programming
+#include <arpa/inet.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
-#define MAX 80
+#include <unistd.h>
 #define PORT 8080
-#define SA struct sockaddr
-void func(int sockfd)
+
+int main(int argc, char const* argv[])
 {
-char buff[MAX];
-int n;
-for (;;) {
-bzero(buff, sizeof(buff));
-printf("Enter the string : ");
-n = 0;
-while ((buff[n++] = getchar()) != '\n')
-;
-write(sockfd, buff, sizeof(buff));
-bzero(buff, sizeof(buff));
-read(sockfd, buff, sizeof(buff));
-printf("From Server : %s", buff);
-if ((strncmp(buff, "exit", 4)) == 0) {
-printf("Client Exit...\n");
-break;
+	int status, valread, client_fd;
+	struct sockaddr_in serv_addr;
+	char* hello = "Hello from client";
+	char buffer[1024] = { 0 };
+	if ((client_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+		printf("\n Socket creation error \n");
+		return -1;
+	}
+
+	serv_addr.sin_family = AF_INET;
+	serv_addr.sin_port = htons(PORT);
+
+	// Convert IPv4 and IPv6 addresses from text to binary
+	// form
+	if (inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr)
+		<= 0) {
+		printf(
+			"\nInvalid address/ Address not supported \n");
+		return -1;
+	}
+
+	if ((status
+		= connect(client_fd, (struct sockaddr*)&serv_addr,
+				sizeof(serv_addr)))
+		< 0) {
+		printf("\nConnection Failed \n");
+		return -1;
+	}
+	send(client_fd, hello, strlen(hello), 0);
+	printf("Hello message sent\n");
+	valread = read(client_fd, buffer, 1024);
+	printf("%s\n", buffer);
+
+	// closing the connected socket
+	close(client_fd);
+	return 0;
 }
-}
-}
-int main()
-{
-int sockfd, connfd;
-struct sockaddr_in servaddr, cli;
-sockfd = socket(AF_INET, SOCK_STREAM, 0);
-if (sockfd == -1) {
-printf("socket creation failed...\n");
-exit(0);
-}
-else
-printf("Socket successfully created..\n");
-bzero(&servaddr, sizeof(servaddr));
-servaddr.sin_family = AF_INET;
-servaddr.sin_addr.s_addr = inet_addr("127.0.0.1");
-servaddr.sin_port = htons(PORT);
-if (connect(sockfd, (SA*)&servaddr, sizeof(servaddr)) != 0) {
-printf("connection with the server failed...\n");
-exit(0);
-}
-else
-printf("connected to the server..\n");
-func(sockfd);
-close(sockfd);
-}
+
