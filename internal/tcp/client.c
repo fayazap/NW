@@ -1,67 +1,33 @@
-#include <arpa/inet.h> // inet_addr()
-#include <netdb.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <strings.h> // bzero()
 #include <sys/socket.h>
-#include <unistd.h> // read(), write(), close()
-#define MAX 80
-#define PORT 8080
-#define SA struct sockaddr
-void func(int sockfd)
-{
-	char buff[MAX];
-	int n;
-	for (;;) {
-		bzero(buff, sizeof(buff));
-		printf("Enter the string : ");
-		n = 0;
-		while ((buff[n++] = getchar()) != '\n')
-			;
-		write(sockfd, buff, sizeof(buff));
-		bzero(buff, sizeof(buff));
-		read(sockfd, buff, sizeof(buff));
-		printf("From Server : %s", buff);
-		if ((strncmp(buff, "exit", 4)) == 0) {
-			printf("Client Exit...\n");
-			break;
-		}
-	}
-}
-
+#include <netinet/in.h>
+#include <string.h>
+#include <arpa/inet.h>
+#include <unistd.h>
 int main()
 {
-	int sockfd, connfd;
-	struct sockaddr_in servaddr, cli;
+    int client;
+    char buffer[1024];
+    struct sockaddr_in servAddr;
+    struct sockaddr_storage store;
+    socklen_t addrSize;
 
-	// socket create and verification
-	sockfd = socket(AF_INET, SOCK_STREAM, 0);
-	if (sockfd == -1) {
-		printf("socket creation failed...\n");
-		exit(0);
-	}
-	else
-		printf("Socket successfully created..\n");
-	bzero(&servaddr, sizeof(servaddr));
+    // initial conf
+    client = socket(AF_INET, SOCK_STREAM, 0);
+    servAddr.sin_family = AF_INET;
+    servAddr.sin_port = htons(6265);
+    servAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
 
-	// assign IP, PORT
-	servaddr.sin_family = AF_INET;
-	servaddr.sin_addr.s_addr = inet_addr("127.0.0.1");
-	servaddr.sin_port = htons(PORT);
+    // client part begins
+    connect(client,(struct sockaddr *)&servAddr,sizeof(servAddr));
+    printf("Sending data to server..\n");
+    printf("Enter the data to be send to server: \n");
+    scanf("%s",buffer);
+    send(client,buffer,sizeof(buffer),0);
+    recv(client,buffer,1024,0);
+    printf("Data received from server: %s",buffer);
+    close(client);
 
-	// connect the client socket to server socket
-	if (connect(sockfd, (SA*)&servaddr, sizeof(servaddr))
-		!= 0) {
-		printf("connection with the server failed...\n");
-		exit(0);
-	}
-	else
-		printf("connected to the server..\n");
 
-	// function for chat
-	func(sockfd);
-
-	// close the socket
-	close(sockfd);
 }
