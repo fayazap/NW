@@ -1,32 +1,26 @@
-#include <stdio.h>
-#include <stdlib.h>
-int main()
-{
-    int n, bsize, bucket = 0, in, out;
-    printf("Enter the no of inputs: \n");
-    scanf("%d", &n);
-    printf("Enter the output rate: \n");
-    scanf("%d", &out);
+#include<stdio.h>
+#include<stdlib.h>
+int main(){
+    int bucket_size,occupied=0,n,out_rate,in;
+    printf("Enter the number of packets: \n");
+    scanf("%d",&n);
     printf("Enter the bucket size: \n");
-    scanf("%d", &bsize);
-    while (n != 0)
-    {
-        printf("Enter the incoming packet size: \n");
-        scanf("%d", &in);
-        if (in <= (bsize - bucket))
-        {
-            bucket += in;
-            printf("status: %d out of %d\n", bucket, bsize);
+    scanf("%d",&bucket_size);
+    printf("Enter the output rate: \n");
+    scanf("%d",&out_rate);
+    while(n!=0){
+        printf("Enter the size of input: \n");
+        scanf("%d",&in);
+        if(in<=(bucket_size-occupied)){
+            occupied+=in;
+            printf("Status: %d out of %d\n",occupied,bucket_size);
+        }else{
+            printf("Dropping %d\n",in-(bucket_size-occupied));
+            occupied=bucket_size;
+            printf("Status: %d out of %d\n",occupied,bucket_size);
         }
-        else
-        {
-            printf("Dropped packets: %d", in - (bsize - bucket));
-            printf("status: %d out of %d\n", bucket, bsize);
-            bucket = bsize;
-        }
-
-        printf("status after removal: %d out of %d\n", bucket, bsize);
-        bucket -= out;
+        printf("Status: %d out of %d\n",occupied,bucket_size);
         n--;
+        occupied-=out_rate;
     }
 }
